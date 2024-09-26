@@ -1,12 +1,18 @@
 import mysql.connector
 from mysql.connector import Error
-from libs import config
+from util.config import Config
 
-database = config.Config.instance().getDataBase()
+database = Config.instance().getDataBase()
 
 class mysqli:
     _instance = None
     _db = None
+
+    def __enter__(self):
+        return self.instance()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def __init__(self):
         try:
