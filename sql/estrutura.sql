@@ -7,7 +7,7 @@ create table if not exists produtos (
     categoria varchar(255),
     primary key(id),
     unique(urli)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8;
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
 
 create table if not exists clientes (
     id bigint not null auto_increment,

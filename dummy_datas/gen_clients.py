@@ -17,10 +17,20 @@ with open('dummy_datas/clientes_base.json','r') as file:
     clientes = json.loads(file.read())
     while total < 1000:
         for client in clientes:
-            while client['email'] in email_index:
-                client['email'] = add_char_email(client['email'])
-            email_index.append(client['email'])
-            lista_1k.append(client)
+            email = client['email']
+            while email in email_index:
+                email = add_char_email(email)
+            email_index.append(email)
+            nclient = {
+                "nome": client['nome'],
+                "sobrenome": client['sobrenome'],
+                "email": email,
+                "data_nascimento": client['data_nascimento'],
+                "data_criacao": client['data_criacao'],
+                "genero": client['genero'],
+                "ativo": client['ativo']
+            }
+            lista_1k.append(nclient)
             total += 1
             if total >= 1000:
                 break 
