@@ -1,0 +1,1 @@
+import dummy_datas.gen_products

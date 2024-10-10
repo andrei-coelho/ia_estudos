@@ -7,18 +7,18 @@ class NetshoesSpider(scrapy.Spider):
     allowed_domains = ["netshoes.com.br"]
 
     start_urls = [
-        'https://www.netshoes.com.br/botas',
-        'https://www.netshoes.com.br/chinelos',
-        'https://www.netshoes.com.br/chuteiras',
-        'https://www.netshoes.com.br/sapatenis',
-        'https://www.netshoes.com.br/tenis',
+        'https://www.netshoes.com.br/botas?page=5',
+        'https://www.netshoes.com.br/chinelos?page=5',
+        'https://www.netshoes.com.br/chuteiras?page=5',
+        'https://www.netshoes.com.br/sapatenis?page=5',
+        'https://www.netshoes.com.br/tenis?page=5',
     ]
 
     MAX_LINKS = 2000
     categorias  = ['botas', 'chinelos', 'chuteiras', 'sapatenis', 'tenis']
 
 
-    def parse(self, response):
+    def parse(self, response):  
 
         categoria_atual = next((cat for cat in self.categorias if cat in response.url), None)
         

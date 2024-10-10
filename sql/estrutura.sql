@@ -10,7 +10,7 @@ create table if not exists produtos (
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
 
 create table if not exists clientes (
-    id bigint not null auto_increment,
+    id bigint not null,
     nome varchar(255) not null,
     sobrenome varchar(255) not null,
     email varchar(255) not null,
