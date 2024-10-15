@@ -11,7 +11,8 @@ def save_clients():
         for client in clientes:
             try:
                 cursor.execute("""
-                    INSERT INTO clientes ( id, nome, sobrenome, email, data_nascimento, data_criacao, genero, ativo ) 
+                    INSERT INTO clientes 
+                    ( id, nome, sobrenome, email, data_nascimento, data_criacao, genero, ativo ) 
                     values (%s, %s, %s, %s, %s, %s, %s, 1)
                 """, (
                     client['id'],
