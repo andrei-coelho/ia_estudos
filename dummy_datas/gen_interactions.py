@@ -13,6 +13,11 @@ def _get_idade_categoria(data_nascimento_str:str):
 
 categorias = [ "sapatenis", "botas", "chuteiras", "chinelos", "tenis" ]
 
+min_avaliacoes = {
+    "35+":3.8,
+    "35-":3.0
+}
+
 chances_de_comprar = {
     "comprador":9,
     "comparador":1,
@@ -144,8 +149,9 @@ def gen_interactions(cliente, data):
         else: gasto+=1 # aqui é quando o usuário está apenas visualizando e não pretende comprar
     
     if chance_comprar:
-        # chance de comprar é se a média de avaliação dos produtos for maior que 3.8
-        comprar = (sum(produtos_carrinho.filter("avaliacao")) / len(produtos_carrinho)) > 3.8
+        # chance de comprar é se a média de avaliação dos produtos for maior que 
+        # 3.8 para pessoas mais velhas | 3.0 para jovens
+        comprar = (sum(p["avaliacao"] for p in produtos_carrinho) / len(produtos_carrinho)) > min_avaliacoes[idade_cli]
         if comprar:
             # altera o status do carrinho como pago
             finalizar_carrinho(carrinho_id)
