@@ -83,7 +83,7 @@ categorias_cliente = {
 }  
 
 def criar_carrinho(cliente_id):
-    pass
+    return 1
 
 def salvar_produto_carrinho(carrinho_id):
     pass
@@ -91,13 +91,37 @@ def salvar_produto_carrinho(carrinho_id):
 def finalizar_carrinho(carrinho_id):
     pass
 
+def prob_adicionar(idade_cli, produto):
+
+    if idade_cli == "35-":
+        peso_preco = 0.7 
+        peso_avaliacao = 0.3
+    else:
+        peso_preco = 0.3 
+        peso_avaliacao = 0.7
+
+    preco = produto['preco']
+    avaliacao = produto['avaliacao']
+    preco_normalizado = 1 - (preco / 600)
+    avaliacao_normalizada = avaliacao / 5 
+    pontuacao = (preco_normalizado * peso_preco) + (avaliacao_normalizada * peso_avaliacao)
+
+    return pontuacao
+    
+
 def get_random_product_by_categoria(categoria):
     cursor = conn.cursor()
     cursor.execute(f'select id,nome,preco,avaliacao from produtos where categoria = "{categoria}" order by rand() limit 1;')
-    return cursor.fetchall()
+    res = cursor.fetchall()
+    return {
+        "id":res[0][0],
+        "nome":res[0][1],
+        "preco":float(res[0][2]),
+        "avaliacao":float(res[0][3])
+    }
     
 
-def gen_interactions(cliente, data):
+def gen_interaction_client(cliente, data):
     
     idade_cli = _get_idade_categoria(cliente['data_nascimento'])
     categorias_stat = categorias_cliente[cliente['genero']][idade_cli]
@@ -113,21 +137,26 @@ def gen_interactions(cliente, data):
     random.shuffle(list_categorias_prods)
     
     chance_comprar = random.randint(0,10) < chances_de_comprar[cliente['type']]
-
+   
     orcamento = random.randint(
         dinheiro_cliente[cliente['genero']][idade_cli]['min'],
         dinheiro_cliente[cliente['genero']][idade_cli]['max']
     ) if chance_comprar else random.randint(0,8)
 
+    print(f"chance de comprar: {chance_comprar}")
+    print(f"orçamento: {orcamento}")
+    print("----------------------------------------")
+
     gasto = 0
     carrinho_id = 0
     produtos_carrinho = []
-    chance_de_adicionar = 0.7
-    # gerando o carrinho
+    
     while gasto < orcamento:
         categoria_produto = random.choice(list_categorias_prods)
         produto = get_random_product_by_categoria(categoria_produto)
         print(produto)
+        chance_de_adicionar = prob_adicionar(idade_cli, produto)
+        print(f"chance: {chance_de_adicionar}")
         # pega um produto do banco de dados
         # salva no banco o produto como visualizado
         # se ele escolher o produto
@@ -138,21 +167,27 @@ def gen_interactions(cliente, data):
                 print("criou carrinho")
                 carrinho_id = criar_carrinho(cliente['id'])
             # adiciona ao carrinho
+            gasto+=float(produto['preco'])
+            if gasto > orcamento: break
             produtos_carrinho.append(produto)
             salvar_produto_carrinho(produto) # adiciona no carrinho do banco de dados
             print("adicionou ao carrinho")
-            # o gasto é o valor total + o produto atual... 
-            # se a soma do ultimo produto for maior que o gasto
-            # o ultimo produto nao será adicionado ao carrinho
-            # ou seja o gasto é a soma total do carrinho
-            gasto+=float(produto['preco'])
-        else: gasto+=1 # aqui é quando o usuário está apenas visualizando e não pretende comprar
+           
+        else: gasto+=1 
     
     if chance_comprar:
-        # chance de comprar é se a média de avaliação dos produtos for maior que 
-        # 3.8 para pessoas mais velhas | 3.0 para jovens
         comprar = (sum(p["avaliacao"] for p in produtos_carrinho) / len(produtos_carrinho)) > min_avaliacoes[idade_cli]
         if comprar:
+            print("---------------------")
+            print("comprou carrinho >>>>>>>>>>")
+            print(f"valor: {sum([p['preco'] for p in produtos_carrinho])}")
             # altera o status do carrinho como pago
             finalizar_carrinho(carrinho_id)
 
+
+def gen_interactions():
+
+    clientes = [{"id": 200, "nome": "Carla", "sobrenome": "Guedes", "email": "carla.guedes@example.com", "data_nascimento": "1986-09-26", "data_criacao": "2024-08-05", "genero": "Feminino", "ativo": 1, "type": "comprador"}]
+
+    for cliente in clientes:
+        gen_interaction_client(cliente, "")
