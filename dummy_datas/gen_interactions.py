@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from util.mysqli import mysqli
-
+from util.jsoni import decode,encode
+import calendar 
 import random
 
 conn = mysqli().instance()
@@ -82,6 +83,11 @@ categorias_cliente = {
     }
 }  
 
+def visualizar_produto(produto_id, cliente_id, data_hora):
+    cursor = conn.cursor()
+    cursor.execute(f"insert into produtos_visualizados (cliente_id, produto_id, visualizado_em) values ( %s, %s, %s ) ", (cliente_id, produto_id, data_hora))
+    conn.commit()
+
 def criar_carrinho(cliente_id):
     return 1
 
@@ -121,7 +127,12 @@ def get_random_product_by_categoria(categoria):
     }
     
 
-def gen_interaction_client(cliente, data):
+def gen_interaction_client(cliente, data_hora):
+
+    print(cliente['id'])
+    print(cliente['type'])
+    print(data_hora)
+    print("--------------")
     
     idade_cli = _get_idade_categoria(cliente['data_nascimento'])
     categorias_stat = categorias_cliente[cliente['genero']][idade_cli]
@@ -143,51 +154,119 @@ def gen_interaction_client(cliente, data):
         dinheiro_cliente[cliente['genero']][idade_cli]['max']
     ) if chance_comprar else random.randint(0,8)
 
-    print(f"chance de comprar: {chance_comprar}")
-    print(f"orçamento: {orcamento}")
-    print("----------------------------------------")
-
     gasto = 0
     carrinho_id = 0
     produtos_carrinho = []
     
     while gasto < orcamento:
+
         categoria_produto = random.choice(list_categorias_prods)
         produto = get_random_product_by_categoria(categoria_produto)
-        print(produto)
+
         chance_de_adicionar = prob_adicionar(idade_cli, produto)
-        print(f"chance: {chance_de_adicionar}")
-        # pega um produto do banco de dados
-        # salva no banco o produto como visualizado
-        # se ele escolher o produto
-        print("visualizou produto")
+        data_hora += timedelta(minutes=random.randint(1,3))
+        visualizar_produto(produto['id'], cliente['id'], data_hora)
         if random.random() < chance_de_adicionar and chance_comprar:
             if carrinho_id == 0:
-                #cria um carrinho no banco de dados
-                print("criou carrinho")
                 carrinho_id = criar_carrinho(cliente['id'])
-            # adiciona ao carrinho
             gasto+=float(produto['preco'])
             if gasto > orcamento: break
             produtos_carrinho.append(produto)
             salvar_produto_carrinho(produto) # adiciona no carrinho do banco de dados
-            print("adicionou ao carrinho")
            
         else: gasto+=1 
     
-    if chance_comprar:
+    if chance_comprar and len(produtos_carrinho) > 0:
         comprar = (sum(p["avaliacao"] for p in produtos_carrinho) / len(produtos_carrinho)) > min_avaliacoes[idade_cli]
         if comprar:
-            print("---------------------")
-            print("comprou carrinho >>>>>>>>>>")
-            print(f"valor: {sum([p['preco'] for p in produtos_carrinho])}")
-            # altera o status do carrinho como pago
             finalizar_carrinho(carrinho_id)
+
+
+def gerar_timestamps_randomicos(inicio, fim, max_por_dia=1):
+
+    timestamps = []
+    data_atual = inicio
+
+    while data_atual <= fim:
+
+        qtd_por_dia = random.randint(0, max_por_dia)
+        
+        for _ in range(qtd_por_dia):
+
+            hora = random.randint(9, 23)  # Hora entre 9 e 23
+            minuto = random.randint(0, 59)  # Minuto entre 0 e 59
+            segundo = random.randint(0, 59)  # Segundo entre 0 e 59
+            
+            timestamp = datetime(
+                year=data_atual.year, 
+                month=data_atual.month, 
+                day=data_atual.day, 
+                hour=hora, 
+                minute=minuto, 
+                second=segundo
+            )
+            
+            timestamps.append(timestamp)
+        
+        data_atual += timedelta(days=1)
+    
+    return timestamps
 
 
 def gen_interactions():
 
-    clientes = [{"id": 200, "nome": "Carla", "sobrenome": "Guedes", "email": "carla.guedes@example.com", "data_nascimento": "1986-09-26", "data_criacao": "2024-08-05", "genero": "Feminino", "ativo": 1, "type": "comprador"}]
+    clientes = []
+
+    with open('dummy_datas/clientes_compilados.json', 'r') as arquivo:
+        clientes = decode(arquivo.read())
+
+    compradores  = []
+    comparadores = []
+    exploradores = []
+
+    chances = {
+        "comprador":1,
+        "comparador":0.6,
+        "explorador":0.2
+    }
 
     for cliente in clientes:
-        gen_interaction_client(cliente, "")
+        if cliente['type'] == 'comprador':
+            compradores.append(cliente)
+        elif cliente['type'] == 'comparador':
+            comparadores.append(cliente)
+        else:
+            exploradores.append(cliente)
+    
+    
+    mes_atual = 7
+    total_meses = 4
+    ano = 2024
+
+    while total_meses > 0:
+
+        exploradores_c = exploradores[:]
+
+        _, ultimo_dia = calendar.monthrange(ano, mes_atual)
+        inicio = datetime(ano, mes_atual, 1)
+        fim = datetime(ano, mes_atual, ultimo_dia)
+
+        timestamps_gerados = gerar_timestamps_randomicos(inicio, fim)
+
+        mes_atual  +=1
+        total_meses-=1
+
+        for timestamp_gerado in timestamps_gerados:
+            num_rand = random.random()
+            if num_rand < chances['explorador']:
+                i = random.randint(0, len(exploradores_c) -1)
+                explorador_selecionado = exploradores_c.pop(i)
+                gen_interaction_client(explorador_selecionado, timestamp_gerado)
+            elif num_rand < chances['comparador']:
+                i = random.randint(0, len(comparadores) -1)
+                gen_interaction_client(comparadores[i], timestamp_gerado)
+            else:
+                i = random.randint(0, len(compradores) -1)
+                gen_interaction_client(compradores[i], timestamp_gerado)
+            return
+        return
