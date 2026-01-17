@@ -11,6 +11,7 @@ def remover_acentos(texto):
     return "".join(c for c in processado if unicodedata.category(c) != 'Mn')
 
 
+
 def get_words_in_text(text):
     
     words = text.strip().lower().split()
