@@ -38,44 +38,13 @@ def get_json_file(caminho):
         return None
 
 
-def aumentar_densidade_feature_e_transmormar_em_vetor(val, dim=200):
-   
-    val_encode = val.strip().lower().encode("utf-8")
-    seed = int(hashlib.sha256(val_encode).hexdigest(), 16)
-
-    vetor = [0.0] * dim
-
-    a = 1664525
-    c = 1013904223
-    m = 2**32
-
-    atual = seed % m
-    for i in range(dim):
-        atual = (a * atual + c) % m
-        vetor[i] = (atual / m) * 2.0 - 1.0
-
-    return vetor
-
 
 def calcular_modulo_vetor(vetor):
     return math.sqrt(sum(v * v for v in vetor))
 
-
-def somar_vetor(a, b):
-    return [x + y for x, y in zip(a, b)]
-
-
-def subtracao_vetor(a, b):
-    return [x - y for x, y in zip(a, b)]
+def distancia_eclidiana(vetorA, vetorB):
+    vetor_diferenca = [(a - b) for a, b in zip(vetorA, vetorB)]
+    return calcular_modulo_vetor(vetor_diferenca)
 
 
-def multiply_vetor(a, b):
-    if len(a) != len(b):
-        print("Vetor A: {}".format(a))
-        print("Vetor B: {}".format(b))
-        raise ValueError("Vetores devem ter o mesmo tamanho. Tamnho a: {}, Tamanho b: {}".format(len(a), len(b)))
-    return sum(x * y for x, y in zip(a, b))
 
-
-def multiplicar_por_escalar(escalar, vetor):
-    return [escalar * x for x in vetor]

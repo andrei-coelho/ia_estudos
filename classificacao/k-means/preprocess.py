@@ -47,7 +47,7 @@ def gerar_idf(dataset, dicionario):
     return idf
 
 
-def vetorizar_modelo():
+def vetorizar_dataset():
 
     dataset    = []
     dicionario = []
@@ -90,4 +90,5 @@ def vetorizar_modelo():
     with open('modelo.json', 'w') as file:
         json.dump(vetores, file, ensure_ascii=False)
 
-vetorizar_modelo()
+
+vetorizar_dataset()
