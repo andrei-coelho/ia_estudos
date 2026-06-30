@@ -8,6 +8,11 @@ def salvar_dicionario_categoria(dicionario_categoria):
     with open('../dummy_datas/dicionario_categoria.json', 'w') as arquivo:
         json.dump(dicionario_categoria, arquivo)
 
+def carregar_modelo():
+    with open('./modelo.json', 'r') as arquivo:
+        modelo = json.load(arquivo)
+        return modelo
+
 def normalizacao(produtos):
     iniid_categoria = 1
     dicionario_categoria = {}
